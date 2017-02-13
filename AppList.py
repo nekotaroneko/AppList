@@ -25,19 +25,12 @@ class AppList (object):
 		if len(app_plist) == 0:
 			print('Your device seem to be jailed')
 		else:
-			
 			for _plist in app_plist:
 				data = biplist.readPlist(_plist)
 				id = data['softwareVersionBundleId']
-				if 'bundleDisplayName' in data:
-					name = data['bundleDisplayName']
-				elif 'title' in data: #for TestFlight app
-					name = data['title']
-				else:
-					name = None
-				
-				
-				self.app_dict[id] = {'name':name, 'id':id,'app_dir':os.path.dirname(_plist)}
+				# TestFlight uses 'title'
+				name = data.get('bundleDisplayName', data.get('title', None))
+				self.app_dict[id] = {'name': name, 'id': id,'app_dir': os.path.dirname(_plist)}
 		
 			app_data_plist = glob.glob('/var/mobile/Containers/Data/Application/*/.com.apple.mobile_container_manager.metadata.plist')
 			for _plist in app_data_plist:
@@ -46,27 +39,19 @@ class AppList (object):
 				if id in self.app_dict:
 					self.app_dict[id]['data_dir'] = os.path.dirname(_plist)#os.path.join(os.path.dirname(_plist),'Documents')
 				
-	def search_by_name(self,name):
+	def search_by_name(self, name):
 		result = False
 		for id, _dict in six.iteritems(self.app_dict):
-			app_name = _dict['name']
-			if app_name:
-				if name in app_name:
-					result = _dict
-		if result:
-			return result
-		else:
-			return None
+			if name in _dict.get('name', ''):
+				result = _dict
+		return result or None
 	
-	def search_by_id(self,id):
+	def search_by_id(self, id):
 		result = False
 		for app_id, _dict in six.iteritems(self.app_dict):
 			if id in app_id:
 				result = _dict
-		if result:
-			return result
-		else:
-			return None
+		return result or None
 			
 
 if __name__ == '__main__':
